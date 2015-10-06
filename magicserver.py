@@ -1,15 +1,14 @@
 import socket
 import time
 from uuid import uuid1
-import sys
 import urlparse
 from threading import Thread
 from Queue import Queue
 
-routes =  {
-            'get'  : {},
-            'post' : {}
-          }
+routes = {
+          'get'  : {},
+          'post' : {}
+         }
 
 CONTENT_TYPE = {
                  'html'          : 'text/html',
@@ -24,11 +23,11 @@ CONTENT_TYPE = {
                  'json'          : 'application/json',
                }
 
-    
+
 cookies = {}
 
 
-def add_route(method,path,func):
+def add_route(method, path, func):
     routes[method][path] = func
 
 
@@ -37,21 +36,23 @@ def add_route(method,path,func):
 Server Functions
 '''
 
-def start_server(hostname, port, nworkers):
+
+def start_server(hostname, port=8080, nworkers=20):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind((hostname, port))
         print "server started at port:", port
         sock.listen(3)
         q = Queue(nworkers)
-        for n in xrange(nworkers):
-            t = Thread(target = thread_worker, args = (q,))
-            t.daemon = True
-            t.start()
+        for i in xrange(nworkers):
+            proc = Thread(target=thread_worker, args=(q,))
+            proc.daemon = True
+            proc.start()
         while True:
             (client_socket, addr) = sock.accept()
             q.put((client_socket, addr))
-            
+    except KeyboardInterrupt:
+        print "Bye Bye"
     finally:
         sock.close()
 
@@ -66,11 +67,11 @@ def thread_worker(q):
         data += buff
         if isValidHTTP(data):
             break
-    if data: 
-        print data
+    if data:
         request_handler(client_socket, data)
     else:
-        client_socket.close()  
+        client_socket.close()
+
 
 def isValidHTTP(data):
     if '\r\n\r\n' in data:
@@ -78,7 +79,7 @@ def isValidHTTP(data):
             head, body = data.split('\r\n\r\n')
             header = head.strip().split('\r\n')
             header = header_parser(header[1:])
-            if header.has_key('Content-Length'):
+            if 'Content-Length' in header:
                 content_length = int(header['Content-Length'])
                 if content_length == len(body):
                     return True
@@ -92,10 +93,12 @@ def isValidHTTP(data):
 *********************************************************************
 Parsers
 '''
+
+
 def request_parser(message):
     request = {}
     try:
-        header,body = message.split('\r\n\r\n')
+        header, body = message.split('\r\n\r\n')
     except IndexError and ValueError:
         header = message.split('\r\n\r\n')[0]
         body = ""
@@ -115,13 +118,13 @@ def request_parser(message):
 def header_parser(message):
     header={}
     for each_line in message:
-        key, value  = each_line.split(": ",1)
+        key, value  = each_line.split(": ", 1)
         header[key] = value
     try:
         cookies  = header['Cookie'].split(";")
         client_cookies = {}
         for cookie in cookies:
-            head,body = cookie.strip().split('=',1)
+            head,body = cookie.strip().split('=', 1)
             client_cookies[head] = body
         header['Cookie'] = client_cookies
     except KeyError:
@@ -133,6 +136,7 @@ def header_parser(message):
 *********************************************************************
 Stringify
 '''
+
 
 def response_stringify(response):
     response_string = response['status'] + '\r\n'
@@ -148,6 +152,7 @@ def response_stringify(response):
 *********************************************************************
 Handler Functions
 '''
+
 
 def request_handler(client_socket,message):
     response          = {}
@@ -167,9 +172,10 @@ def cookie_handler(request, response):
     cookies[cookie]        = {}
 
 
-def method_handler(request,response):
+def method_handler(request, response):
     handler = METHOD[request['method']]
-    handler(request,response)
+    handler(request, response)
+
     
 def get_handler(request,response):
     try:
@@ -183,22 +189,16 @@ def get_handler(request,response):
 
 
 def post_handler(request,response):
-    if True:
-        cookie = request['header']['Cookie']
-        print cookie
-        content                  = urlparse.parse_qs(request['body'])
-        print content
-        content, content_type    = routes['post'][request['path']](content, cookie)
-        if not content:
-           err_404_handler(request, response)
-           return 
-        response['status']       = "HTTP/1.1 200 OK"
-        response['content']      = content
-        response['Content-type'] = CONTENT_TYPE[content_type]
-    '''
-    except KeyError:
-        print "Landing Not defined"
-    '''
+    cookie = request['header']['Cookie']
+    content = urlparse.parse_qs(request['body'])
+    content, content_type = routes['post'][request['path']](content, cookie)
+    if not content:
+        err_404_handler(request, response)
+        return 
+    response['status']       = "HTTP/1.1 200 OK"
+    response['content']      = content
+    response['Content-type'] = CONTENT_TYPE[content_type]
+
 
 def head_handler(request, response):
     pass
@@ -210,6 +210,7 @@ def file_handler(request, response):
 
 def delete_handler(request, response):
     pass
+
 
 def static_file_handler(request, response):
     try:
@@ -229,19 +230,19 @@ def err_404_handler(request, response):
     
 
 def response_handler(request, response):
-    response['Date']       = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+    response['Date'] = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
     response['Connection'] = 'close'
     response['Server']     = 'geekskool_magic_server'
     response_string        = response_stringify(response)
     request['socket'].send(response_string)
     request['socket'].close()
-    
-
+   
          
 METHOD  =      {
                  'GET'           : get_handler,
-	         'POST'          : post_handler,
+                 'POST'          : post_handler,
                  'DELETE'        : delete_handler,
                  'HEAD'          : head_handler,
                  'FILE'          : file_handler,
                }
+
