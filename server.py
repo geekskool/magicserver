@@ -3,6 +3,8 @@ import time
 from uuid import uuid1
 import sys
 import urlparse
+from threading import Thread
+from Queue import Queue
 
 routes =  {
             'get'  : {},
@@ -35,28 +37,28 @@ def add_route(method,path,func):
 Server Functions
 '''
 
-def start_server(hostname, port):
+def start_server(hostname, port, nworkers):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind((hostname, port))
         print "server started at port:", port
         sock.listen(3)
+        q = Queue(nworkers)
+        for n in xrange(nworkers):
+            t = Thread(target = thread_worker, args = (q,))
+            t.daemon = True
+            t.start()
         while True:
-            client_socket, message = accept_connection(sock)
-            if message:
-                request_handler(client_socket,message)
-            else:
-                client_socket.close()
-    except KeyboardInterrupt:
-        print "Bye Bye"
+            (client_socket, addr) = sock.accept()
+            q.put((client_socket, addr))
+            
     finally:
         sock.close()
 
 
-def accept_connection(sock):
+def thread_worker(q):
+    client_socket, addr = q.get()
     data = ""
-    (client_socket,(ip,port)) = sock.accept()
-    print "connection request from client:", ip
     while True:
         buff = client_socket.recv(2048)
         if not buff:
@@ -64,8 +66,11 @@ def accept_connection(sock):
         data += buff
         if isValidHTTP(data):
             break
-    return client_socket, data
-    
+    if data: 
+        print data
+        request_handler(client_socket, data)
+    else:
+        client_socket.close()  
 
 def isValidHTTP(data):
     if '\r\n\r\n' in data:
