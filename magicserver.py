@@ -23,7 +23,6 @@ CONTENT_TYPE = {
                  'json'          : 'application/json',
                }
 
-
 cookies = {}
 
 
@@ -169,7 +168,6 @@ def cookie_handler(request, response):
         return
     cookie                 = str(uuid1())
     response['Set-Cookie'] = 'sid=' + cookie
-    cookies[cookie]        = {}
 
 
 def method_handler(request, response):
@@ -179,44 +177,36 @@ def method_handler(request, response):
     
 def get_handler(request,response):
     try:
-        cookie = request['header']['Cookie']
-        content, content_type    = routes['get'][request['path']](cookie)
-        response['status']       = "HTTP/1.1 200 OK"
-        response['content']      = content
-        response['Content-type'] = CONTENT_TYPE[content_type]
+        routes['get'][request['path']](request, response)
+        if response['content'] and response['Content-type']:
+            response['status'] = 'HTTP/1.1 200 OK'
+            response['Content-Length'] = str(len(response['content']))
+        else:
+            err_404_handler(request, response)
     except KeyError:
         static_file_handler(request,response)
 
 
 def post_handler(request,response):
-    cookie = request['header']['Cookie']
-    content = urlparse.parse_qs(request['body'])
-    content, content_type = routes['post'][request['path']](content, cookie)
-    if not content:
+    request['content'] = urlparse.parse_qs(request['body'])
+    routes['post'][request['path']](request, response)
+    if response['content'] and response['Content-type']:
+        response['status'] = 'HTTP/1.1 200 OK'
+        response['Content-Length'] = str(len(response['content']))
+    else:
         err_404_handler(request, response)
-        return 
-    response['status']       = "HTTP/1.1 200 OK"
-    response['content']      = content
-    response['Content-type'] = CONTENT_TYPE[content_type]
 
 
 def head_handler(request, response):
-    pass
-
-
-def file_handler(request, response):
-    pass
-
-
-def delete_handler(request, response):
-    pass
+    get_handler(request, response)
+    response['content'] = ''
 
 
 def static_file_handler(request, response):
     try:
         with open('./public' + request['path'],'r') as fd:
             response['content']  = fd.read() 
-        content_type             = request['path'].split('.')[-1].lower()
+        content_type = request['path'].split('.')[-1].lower()
         response['Content-type'] = CONTENT_TYPE[content_type]
         response['status']       = "HTTP/1.1 200 OK"
     except IOError:
@@ -232,7 +222,7 @@ def err_404_handler(request, response):
 def response_handler(request, response):
     response['Date'] = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
     response['Connection'] = 'close'
-    response['Server']     = 'geekskool_magic_server'
+    response['Server']     = 'magicserver0.1'
     response_string        = response_stringify(response)
     request['socket'].send(response_string)
     request['socket'].close()
@@ -241,8 +231,6 @@ def response_handler(request, response):
 METHOD  =      {
                  'GET'           : get_handler,
                  'POST'          : post_handler,
-                 'DELETE'        : delete_handler,
                  'HEAD'          : head_handler,
-                 'FILE'          : file_handler,
                }
 
