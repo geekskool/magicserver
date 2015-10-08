@@ -27,7 +27,7 @@ which takes 3 parameters
 
 Eg: 
 ```
-def home(cookies):
+def home(request, response):
   return '<html><body>Hello World</body></html>', 'html'
   
 magicserver.add_route('get', '/', home)

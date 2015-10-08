@@ -44,7 +44,7 @@ def start_server(hostname, port=8080, nworkers=20):
         sock.listen(3)
         q = Queue(nworkers)
         for i in xrange(nworkers):
-            proc = Thread(target=thread_worker, args=(q,))
+            proc = Thread(target=worker_thread, args=(q,))
             proc.daemon = True
             proc.start()
         while True:
@@ -56,7 +56,7 @@ def start_server(hostname, port=8080, nworkers=20):
         sock.close()
 
 
-def thread_worker(q):
+def worker_thread(q):
     client_socket, addr = q.get()
     data = ""
     while True:
