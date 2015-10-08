@@ -8,7 +8,14 @@ pip install magicserver
 
 ## Usage
 
-Static files has to be enclosed in the directory, 'public' inside root.
+Static files have to be enclosed in the directory, 'public' inside root.
+
+/
+  public/
+    js/
+    img/
+    css/
+
 
 To map dynamic pages, use the function
 *magicserver.add_route()* 
