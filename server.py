@@ -23,11 +23,8 @@ CONTENT_TYPE = {
                  'json'          : 'application/json',
                }
 
-<<<<<<< HEAD
 sessions = {}
-=======
 cookies = {}
->>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
 
 
 def add_route(method, path, func):
@@ -61,10 +58,7 @@ def start_server(hostname, port=8080, nworkers=20):
 
 
 def worker_thread(q):
-<<<<<<< HEAD
     request = {}
-=======
->>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
     client_socket, addr = q.get()
     request['socket'] = client_socket
     data = ""
@@ -74,45 +68,8 @@ def worker_thread(q):
         if not buff:
             break
         data += buff
-<<<<<<< HEAD
     try:
         header, body = data.split('\r\n\r\n', 1)
-=======
-        if isValidHTTP(data):
-            break
-    if data:
-        request_handler(client_socket, data)
-    else:
-        client_socket.close()
-
-
-def isValidHTTP(data):
-    if '\r\n\r\n' in data:
-        try:
-            head, body = data.split('\r\n\r\n')
-            header = head.strip().split('\r\n')
-            header = header_parser(header[1:])
-            if 'Content-Length' in header:
-                content_length = int(header['Content-Length'])
-                if content_length == len(body):
-                    return True
-            else:
-                return True
-        except ValueError:
-            return False
-
-
-'''
-*********************************************************************
-Parsers
-'''
-
-
-def request_parser(message):
-    request = {}
-    try:
-        header, body = message.split('\r\n\r\n')
->>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
     except IndexError and ValueError:
         header = data.split('\r\n\r\n')[0]
         body = ""
@@ -146,13 +103,8 @@ Parsers
 
 def header_parser(header_str):
     header={}
-<<<<<<< HEAD
     for each_line in header_str:
         key, value  = each_line.split(': ', 1)
-=======
-    for each_line in message:
-        key, value  = each_line.split(": ", 1)
->>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
         header[key] = value
     try:
         cookies = header['Cookie'].split(';')
@@ -188,11 +140,7 @@ Handler Functions
 '''
 
 
-<<<<<<< HEAD
 def request_handler(request):
-=======
-def request_handler(client_socket,message):
->>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
     response          = {}
     session_handler(request, response)
     method_handler(request,response)
@@ -204,10 +152,7 @@ def session_handler(request, response):
         return
     cookie = str(uuid1())
     response['Set-Cookie'] = 'sid=' + cookie
-<<<<<<< HEAD
     sessions[cookie] = {}
-=======
->>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
 
 
 def method_handler(request, response):
@@ -223,7 +168,6 @@ def get_handler(request,response):
 
 
 def post_handler(request,response):
-<<<<<<< HEAD
     try:
         request['content'] = urlparse.parse_qs(request['body'])
         routes['post'][request['path']](request, response)
@@ -231,12 +175,6 @@ def post_handler(request,response):
         err_404_hanlder(request, response)
 
 
-=======
-    request['content'] = urlparse.parse_qs(request['body'])
-    routes['post'][request['path']](request, response)
-
-
->>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
 def head_handler(request, response):
     get_handler(request, response)
     response['content'] = ''
@@ -274,7 +212,6 @@ def response_handler(request, response):
     response['Server']     = 'magicserver0.1'
     response_string        = response_stringify(response)
     request['socket'].send(response_string)
-<<<<<<< HEAD
     if request['header']['Connection'] != 'keep-alive':
         request['socket'].close()
     else:
@@ -317,10 +254,6 @@ def send_json_handler(request, response, content):
         err_400_handler(request, response)
 
 
-=======
-    request['socket'].close()
-
-
 def send_html_handler(request, response, content):
     if content:
         response['content'] = content
@@ -339,7 +272,6 @@ def send_json_handler(request, response, content):
         err_400_handler(request, response)
 
 
->>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
 METHOD  =      {
                  'GET'           : get_handler,
                  'POST'          : post_handler,
