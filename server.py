@@ -23,7 +23,11 @@ CONTENT_TYPE = {
                  'json'          : 'application/json',
                }
 
+<<<<<<< HEAD
+sessions = {}
+=======
 cookies = {}
+>>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
 
 
 def add_route(method, path, func):
@@ -57,13 +61,23 @@ def start_server(hostname, port=8080, nworkers=20):
 
 
 def worker_thread(q):
+<<<<<<< HEAD
+    request = {}
+=======
+>>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
     client_socket, addr = q.get()
+    request['socket'] = client_socket
     data = ""
-    while True:
+    #Checking valid HTTP Header
+    while '\r\n\r\n' not in data:
         buff = client_socket.recv(2048)
         if not buff:
             break
         data += buff
+<<<<<<< HEAD
+    try:
+        header, body = data.split('\r\n\r\n', 1)
+=======
         if isValidHTTP(data):
             break
     if data:
@@ -98,29 +112,50 @@ def request_parser(message):
     request = {}
     try:
         header, body = message.split('\r\n\r\n')
+>>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
     except IndexError and ValueError:
-        header = message.split('\r\n\r\n')[0]
+        header = data.split('\r\n\r\n')[0]
         body = ""
     header = header.strip().split('\r\n')
     first = header.pop(0)
-    request["method"]   = first.split()[0]
-    request["path"]     = first.split()[1]
-    request["protocol"] = first.split()[2]
+    request["method"], request["path"], request["protocol"] = first.split()
     if header:
-        request['header']   = header_parser(header)
+        request['header'] = header_parser(header)
+    if 'Content-Length' in request['header']:
+        content_length = int(request['header']['Content-Length'])
+        data = body     
+        while content_length != len(data):
+            buff = client_socket.recv(2048)
+            if not buff:
+                break
+            data += buff
+    
+        request['body'] = data
+    print request
+    if request:
+        request_handler(request)
     else:
-        request['header']    = {'Cookie':""}
-    request['body']     = body
-    return request
+        client_socket.close()
 
 
-def header_parser(message):
+'''
+*********************************************************************
+Parsers
+'''
+
+
+def header_parser(header_str):
     header={}
+<<<<<<< HEAD
+    for each_line in header_str:
+        key, value  = each_line.split(': ', 1)
+=======
     for each_line in message:
         key, value  = each_line.split(": ", 1)
+>>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
         header[key] = value
     try:
-        cookies  = header['Cookie'].split(";")
+        cookies = header['Cookie'].split(';')
         client_cookies = {}
         for cookie in cookies:
             head,body = cookie.strip().split('=', 1)
@@ -153,20 +188,26 @@ Handler Functions
 '''
 
 
+<<<<<<< HEAD
+def request_handler(request):
+=======
 def request_handler(client_socket,message):
+>>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
     response          = {}
-    request           = request_parser(message)
-    request['socket'] = client_socket
-    cookie_handler(request, response)
+    session_handler(request, response)
     method_handler(request,response)
    
 
-def cookie_handler(request, response):
+def session_handler(request, response):
     browser_cookies = request['header']['Cookie']
-    if 'sid' in browser_cookies and browser_cookies['sid'] in cookies:
+    if 'sid' in browser_cookies and browser_cookies['sid'] in sessions:
         return
-    cookie                 = str(uuid1())
+    cookie = str(uuid1())
     response['Set-Cookie'] = 'sid=' + cookie
+<<<<<<< HEAD
+    sessions[cookie] = {}
+=======
+>>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
 
 
 def method_handler(request, response):
@@ -182,10 +223,20 @@ def get_handler(request,response):
 
 
 def post_handler(request,response):
+<<<<<<< HEAD
+    try:
+        request['content'] = urlparse.parse_qs(request['body'])
+        routes['post'][request['path']](request, response)
+    except KeyError:
+        err_404_hanlder(request, response)
+
+
+=======
     request['content'] = urlparse.parse_qs(request['body'])
     routes['post'][request['path']](request, response)
 
 
+>>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
 def head_handler(request, response):
     get_handler(request, response)
     response['content'] = ''
@@ -223,6 +274,50 @@ def response_handler(request, response):
     response['Server']     = 'magicserver0.1'
     response_string        = response_stringify(response)
     request['socket'].send(response_string)
+<<<<<<< HEAD
+    if request['header']['Connection'] != 'keep-alive':
+        request['socket'].close()
+    else:
+        print "Got a live Connection"
+
+
+def add_session(request, response, content):
+    browser_cookies = request['header']['Cookie']
+    if 'sid' in browser_cookies:
+        sid = browser_cookies['sid'] 
+        if sid in sessions:
+            sessions[sid] = content
+    print content
+
+
+def get_session(request, response):
+    print sessions
+    browser_cookies = request['header']['Cookie']
+    if 'sid' in browser_cookies:
+        sid = browser_cookies['sid'] 
+        if sid in sessions:
+            return sessions[sid]
+
+
+def send_html_handler(request, response, content):
+    if content:
+        response['content'] = content
+        response['Content-type'] = 'text/html'
+        OK_200_handler(request, response)
+    else:
+        err_400_handler(resquest, response)
+
+
+def send_json_handler(request, response, content):
+    if content:
+        response['content'] = json.dumps(content)
+        response['Content-type'] = 'application/json'
+        OK_200_handler(request, response) 
+    else:
+        err_400_handler(request, response)
+
+
+=======
     request['socket'].close()
 
 
@@ -244,6 +339,7 @@ def send_json_handler(request, response, content):
         err_400_handler(request, response)
 
 
+>>>>>>> a75232c9003d768274dd62e4e43e968f1fda3432
 METHOD  =      {
                  'GET'           : get_handler,
                  'POST'          : post_handler,
