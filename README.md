@@ -6,7 +6,7 @@ Functional web server in Python
 
 Copy the server.py file to your folder.
 
-## Usage
+## How to use:
 
 Static files have to be enclosed in 'public' directory under root.
 
@@ -17,7 +17,7 @@ Static files have to be enclosed in 'public' directory under root.
     css/
 
 
-To map dynamic pages, use the function
+To map the dynamic pages, use the function
 *server.add_route()* 
 which takes 3 parameters
 
@@ -30,7 +30,7 @@ Eg:
 def home(request, response):
   return server.send_html_handler(request, response, content)
   
-magicserver.add_route('get', '/', home)
+server.add_route('get', '/', home)
 ```
 
 To start server, use
@@ -38,7 +38,7 @@ To start server, use
 
 Eg:
 
-  `magicserver.start_server("lcalhost", 8080, 20)`
+  `server.start_server("lcalhost", 8080, 20)`
 
 To send html or json data response, use the following functions
 *server.send_html_handler()*
