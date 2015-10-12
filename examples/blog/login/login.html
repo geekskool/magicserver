@@ -1,0 +1,54 @@
+<html>
+<head>
+  <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+  <script id="sdk-js" src="https://cdn.digits.com/1/sdk.js" async></script>
+  
+</head>
+<body>
+
+
+<script>   
+	document.getElementById('sdk-js').onload = function() {
+  		Digits.init({ consumerKey: 'MYFeeLrod8xbnfFeQLKhVWs7E' });
+    };  
+  
+	function onLoginButtonClick(event){
+  		Digits.logIn()
+    	.done(onLogin) /*handle the response*/
+    	.fail(onLoginFailure);
+	}
+
+	function onLogin(loginResponse){
+  		var oAuthHeaders = loginResponse.oauth_echo_headers;
+  		var verifyData = {
+    		authHeader: oAuthHeaders['X-Verify-Credentials-Authorization'],
+    		apiUrl: oAuthHeaders['X-Auth-Service-Provider']
+  		};
+
+  		$.post('/verify',verifyData)
+    	.done(function(res){
+    		console.log(res)
+    		var obj = res;
+
+    		 if (obj.status=='success'){
+      console.log(obj)
+                        window.location = '/';
+    		 	}
+    		  else {
+    		  	console.log('failure')
+			window.location = '/';
+    		  } 
+    		});
+	}
+
+	function onLoginFailure(loginResponse){
+  		console.log(loginResponse);
+	}
+	
+</script>
+
+
+<button id="digits-sdk" onclick="onLoginButtonClick()">Click me</button>
+
+</body>
+</html>
