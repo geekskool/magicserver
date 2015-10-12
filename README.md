@@ -4,7 +4,7 @@ Functional web server in Python
 
 ## Install
 
-Copy the server.py file to your folder.
+Copy the server.py file to your working folder. Or pip install magicserver, this will install magicserver 0.1 (version) on your system.
 
 ## How to use:
 
