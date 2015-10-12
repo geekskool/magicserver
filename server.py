@@ -5,6 +5,8 @@ import urlparse
 from threading import Thread
 from Queue import Queue
 import json
+
+
 routes = {
           'get'  : {},
           'post' : {}
@@ -73,6 +75,8 @@ def worker_thread(q):
     except IndexError and ValueError:
         header = data.split('\r\n\r\n')[0]
         body = ""
+    if not header:
+        return
     header = header.strip().split('\r\n')
     first = header.pop(0)
     request["method"], request["path"], request["protocol"] = first.split()
@@ -83,12 +87,10 @@ def worker_thread(q):
         data = body     
         while content_length != len(data):
             buff = client_socket.recv(2048)
+            data += buff
             if not buff:
                 break
-            data += buff
-    
         request['body'] = data
-    print request
     if request:
         request_handler(request)
     else:

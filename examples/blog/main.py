@@ -3,7 +3,6 @@ import requests
 import ast
 import redis
 import time
-import json
 
 redis_server = redis.Redis('localhost')
 
@@ -50,7 +49,7 @@ def home(request, response):
 
 
 def login(request, response):
-    with open("./login/login.html", "r") as fd:
+    with open("./views/login.html", "r") as fd:
         server.send_html_handler(request, response, fd.read())
 
 
@@ -70,7 +69,7 @@ def verify(request, response):
     
 
 def profile(request, response):
-    with open("./profile/profile.html", "r") as fd:
+    with open("./views/profile.html", "r") as fd:
         server.send_html_handler(request, response, fd.read())
 
 
@@ -84,7 +83,7 @@ def update_profile(request, response):
 
 
 def write(request, response):
-    with open("./write/write.html", "r") as fd:
+    with open("./views/write.html", "r") as fd:
         server.send_html_handler(request, response, fd.read())
 
 
@@ -104,7 +103,7 @@ def new_blog(request, response):
     return home(request, response)
 
 def admin(request, response):
-    with open("./admin/admin.html", "r") as fd:
+    with open("./views/admin.html", "r") as fd:
         server.send_html_handler(request, response, fd.read())
 
 
