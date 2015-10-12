@@ -89,7 +89,6 @@ def write(request, response):
 
 def new_blog(request, response):
     session_data = server.get_session(request, response)
-    print session_data
     if session_data and session_data.has_key('user'):
         title = request['content']['title'][0]
         blog = request['content']['blog'][0]

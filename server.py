@@ -63,34 +63,14 @@ def worker_thread(q):
     request = {}
     client_socket, addr = q.get()
     request['socket'] = client_socket
-    data = ""
-    #Checking valid HTTP Header
-    while '\r\n\r\n' not in data:
-        buff = client_socket.recv(2048)
-        if not buff:
-            break
-        data += buff
-    try:
-        header, body = data.split('\r\n\r\n', 1)
-    except IndexError and ValueError:
-        header = data.split('\r\n\r\n')[0]
-        body = ""
-    if not header:
+    header_str, body_str = get_http_header(request, '')
+    if not header_str:
         return
-    header = header.strip().split('\r\n')
-    first = header.pop(0)
-    request["method"], request["path"], request["protocol"] = first.split()
-    if header:
-        request['header'] = header_parser(header)
+    header_parser(request, header_str)
     if 'Content-Length' in request['header']:
         content_length = int(request['header']['Content-Length'])
-        data = body     
-        while content_length != len(data):
-            buff = client_socket.recv(2048)
-            data += buff
-            if not buff:
-                break
-        request['body'] = data
+        body_str = get_http_body(request, body_str, content_length)
+        request['body'] = body_str
     if request:
         request_handler(request)
     else:
@@ -103,21 +83,47 @@ Parsers
 '''
 
 
-def header_parser(header_str):
-    header={}
-    for each_line in header_str:
+def get_http_header(request, data):
+    if '\r\n\r\n' in data:
+        data_list = data.split('\r\n\r\n', 1)
+        header_str = data_list[0]
+        body_str = ''
+        if len(data_list) > 1:
+            body_str = data_list[1]
+        return header_str, body_str
+    buff = request['socket'].recv(2048)
+    if not buff:
+        return '',''
+    return get_http_header(request, data+buff)
+
+
+def get_http_body(request, body_str, content_length):
+    if content_length == len(body_str):
+        return body_str
+    buff = request['socket'].recv(2048)
+    if not buff:
+        return
+    return get_http_body(request, body_str+buff, content_length)
+
+
+def header_parser(request, header_str):
+    header = {}
+    header_list = header_str.split('\r\n')
+    first = header_list.pop(0)
+    request['method'], request['path'], request['protocol'] = first.split()
+    for each_line in header_list:
         key, value  = each_line.split(': ', 1)
         header[key] = value
-    try:
+    if 'Cookie' in header:
         cookies = header['Cookie'].split(';')
         client_cookies = {}
         for cookie in cookies:
             head,body = cookie.strip().split('=', 1)
             client_cookies[head] = body
         header['Cookie'] = client_cookies
-    except KeyError:
-        header['Cookie'] = ""
-    return header
+    else:
+        header['Cookie'] = ''
+    request['header'] = header
 
 
 '''
@@ -216,8 +222,6 @@ def response_handler(request, response):
     request['socket'].send(response_string)
     if request['header']['Connection'] != 'keep-alive':
         request['socket'].close()
-    else:
-        print "Got a live Connection"
 
 
 def add_session(request, response, content):
@@ -226,11 +230,9 @@ def add_session(request, response, content):
         sid = browser_cookies['sid'] 
         if sid in sessions:
             sessions[sid] = content
-    print content
 
 
 def get_session(request, response):
-    print sessions
     browser_cookies = request['header']['Cookie']
     if 'sid' in browser_cookies:
         sid = browser_cookies['sid'] 
