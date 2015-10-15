@@ -258,24 +258,6 @@ def send_json_handler(request, response, content):
         err_400_handler(request, response)
 
 
-def send_html_handler(request, response, content):
-    if content:
-        response['content'] = content
-        response['Content-type'] = 'text/html'
-        OK_200_handler(request, response)
-    else:
-        err_400_handler(resquest, response)
-
-
-def send_json_handler(request, response, content):
-    if content:
-        response['content'] = json.dumps(content)
-        response['Content-type'] = 'application/json'
-        OK_200_handler(request, response) 
-    else:
-        err_400_handler(request, response)
-
-
 METHOD  =      {
                  'GET'           : get_handler,
                  'POST'          : post_handler,
