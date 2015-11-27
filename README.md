@@ -38,7 +38,7 @@ To start server, use
 
 Eg:
 
-  `server.start_server("lcalhost", 8080, 20)`
+  `server.start_server("localhost", 8080, 20)`
 
 To send html or json data response, use the following functions
 *server.send_html_handler()*
