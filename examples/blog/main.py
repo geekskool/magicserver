@@ -30,7 +30,7 @@ def html_tail():
 
 def home(request, response):
     data = html_header()
-    session_data = server.get_session(request, response)
+    session_data = server.get_session(request)
     if session_data and 'user' in session_data:
         data += 'Hi '
         user = str(session_data['user'])
@@ -64,7 +64,7 @@ def verify(request, response):
     else:
         result = 'failure'
     content = {'status': result, 'user': phone_num}
-    server.add_session(request, response, content)
+    server.add_session(request, content)
     server.send_json_handler(request, response, content)
 
 
@@ -74,7 +74,7 @@ def profile(request, response):
 
 
 def update_profile(request, response):
-    session_data = server.get_session(request, response)
+    session_data = server.get_session(request)
     if session_data and 'user' in session_data:
         name = request['content']['name'][0]
         email = request['content']['email'][0]
@@ -90,7 +90,7 @@ def write(request, response):
 
 
 def new_blog(request, response):
-    session_data = server.get_session(request, response)
+    session_data = server.get_session(request)
     if session_data and 'user' in session_data:
         title = request['content']['title'][0]
         blog = request['content']['blog'][0]
@@ -112,7 +112,7 @@ def admin(request, response):
 
 def new_user(request, response):
     content = request['content']
-    session_data = server.get_session(request, response)
+    session_data = server.get_session(request)
     if session_data and 'user' in session_data:
         new_user = content['user'][0]
         redis_server.sadd('all_users', new_user)
