@@ -36,7 +36,14 @@ def add_route(method, path, func):
 
 
 #Server Functions
+def spwan_thread(func, arg, daemon):
+    '''Spwan thread
 
+    Spwan daemon threads
+    '''
+    proc = Thread(target=func, args=arg)
+    proc.daemon = daemon
+    proc.start()
 
 def start_server(hostname, port=8080, nworkers=20):
     '''Start Function
@@ -50,12 +57,11 @@ def start_server(hostname, port=8080, nworkers=20):
         sock.listen(3)
         worker_queue = Queue(nworkers)
         for _ in xrange(nworkers):
-            proc = Thread(target=worker_thread, args=(worker_queue,))
-            proc.daemon = True
-            proc.start()
+            spwan_thread(worker_thread, (worker_queue,), True)
         while True:
             (client_socket, addr) = sock.accept()
             worker_queue.put((client_socket, addr))
+            spwan_thread(worker_thread, (worker_queue,), True)
     except KeyboardInterrupt:
         print "Bye Bye"
     finally:
@@ -312,6 +318,16 @@ def get_session(request):
         if sid in SESSIONS:
             return SESSIONS[sid]
 
+def del_session(request):
+    '''DEL SESSIONS
+    
+    Delete session from SESSIONS
+    '''
+    browser_cookies = request['header']['Cookie']
+    if 'sid' in browser_cookies:
+        sid = browser_cookies['sid']
+        if sid in SESSIONS:
+            del SESSIONS[sid]
 
 def send_html_handler(request, response, content):
     '''send_html handler
